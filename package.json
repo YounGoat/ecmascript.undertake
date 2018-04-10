@@ -1,0 +1,35 @@
+{
+    "bin": {},
+    "dependencies": {},
+    "devDependencies": {
+        "noda": "^0.4.0",
+        "mocha": "^3.3.0"
+    },
+    "directories": {},
+    "scripts": {
+        "test": "mocha"
+    },
+    "name": "undertake",
+    "version": "0.0.1",
+    "main": "index.js",
+    "keywords": [
+        "async",
+        "promise",
+        "cocurrent",
+        "synchronise",
+        "generator",
+        "coroutine"
+    ],
+    "homepage": "https://github.com/YounGoat/ecmascript.undertake",
+    "description": "Another choice beyond co.",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/YounGoat/ecmascript.undertake.git"
+    },
+    "author": {
+        "name": "YounGoat",
+        "email": "youngoat@163.com",
+        "url": "https://youngoat.github.io"
+    },
+    "license": "MIT"
+}
