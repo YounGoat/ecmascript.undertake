@@ -41,7 +41,7 @@ function undertake(G, callback, compatible = false) {
 			if (step.done) {
 				return resolve(step.value);
 			}
-			else if (step.value instanceof Promise) {
+			else if (step.value instanceof Promise || step.value && typeof step.value.then == 'function') {
 				step.value.then(ret => nextLoop(null, ret)).catch(reject);
 			}
 			else if (isGeneratorFunction(step.value) || isGenerator(step.value)) {
