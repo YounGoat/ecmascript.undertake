@@ -78,6 +78,32 @@ function undertake(G, callback, compatible = false) {
 	}
 }
 
+
+/**
+ * @param {Function}  Fn 
+ * @param {this}     [handle] - this value on calling Fn
+ * @param {Array}    [args]   - arguments to be passed through
+ */
+undertake.applying = function(Fn, handle, args) {
+	return new Promise(function(resolve, reject) {
+		args.push((err, data) => err ? reject(err) : resolve(data));
+		Fn.apply(handle, args);
+	});
+};
+
+/**
+ * @param {Function}  Fn 
+ * @param {this}     [handle] - this value on calling Fn
+ * @param {...}      [arg]    - arguments to be passed through
+ */
+undertake.calling = function(Fn, handle, ...arg) {
+	let args = Array.from(arguments).slice(2);
+	return new Promise(function(resolve, reject) {
+		args.push((err, data) => err ? reject(err) : resolve(data));
+		Fn.apply(handle, args);
+	});
+};
+
 undertake.easy = function(G, callback) {
 	return undertake(G, callback, true);
 };

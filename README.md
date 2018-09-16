@@ -73,6 +73,8 @@ undertake(success).then(ret => {
 ##	API
 
 *   Promise __undertake__(GeneratorFunction *fn*)
+*   Promise __undertake.applying__(Function *fn*, Object *this_value*, Array *args*)
+*   Promise __undertake.calling__(Function *fn*, Object *this_value*, Any *arg_0*, ...)
 *   Promise __undertake.easy__(GeneratorFunction *fn*)
 *   Promise(undefined) __undertake.each__(Array *arr*, GeneratorFunction *iterator*)
 *   Promise(Array) __undertake.map__(Array *arr*, GeneratorFunction *iterator*)

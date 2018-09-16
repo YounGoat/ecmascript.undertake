@@ -69,6 +69,30 @@ describe('undertake, without callback (promise returned)', () => {
         undertake(f).catch(err => assert.equal(err, E)).then(done);
     });
 
+    it('apply function needing callback', done => {
+        function t(data, callback) {
+            setTimeout(callback, 1, null, data);
+        }
+
+        function* f() {
+            var a = yield undertake.applying(t, null, [A]);
+            return a;
+        }
+        undertake(f).then(ret => assert.equal(ret, A)).then(done);
+    });
+
+    it('call function needing callback', done => {
+        function t(data, callback) {
+            setTimeout(callback, 1, null, data);
+        }
+
+        function* f() {
+            var a = yield undertake.calling(t, null, A);
+            return a;
+        }
+        undertake(f).then(ret => assert.equal(ret, A)).then(done);
+    });
+
     it('runtime error (directly in generatorFunction body)', done => {
         function* f() {
             throw E;
