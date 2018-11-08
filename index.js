@@ -68,7 +68,17 @@ function undertake(G, callback, compatible = false) {
 		}
 	};
 
-	if (callback) {
+	if (callback && isGeneratorFunction(callback)) {
+		return new Promise(RR)
+			.then(ret => {
+				return undertake.sync(callback)(null, ret);
+			})
+			.catch(ex => {
+				return undertake.sync(callback)(ex);
+			})
+			;
+	}
+	else if (callback) {
 		let resolve = ret => callback(null, ret);
 		let reject = callback;
 		RR(resolve, reject);
@@ -78,9 +88,14 @@ function undertake(G, callback, compatible = false) {
 	}
 }
 
+undertake.sync = function(Fn, callback) {
+	return function() {
+		return undertake(Fn.apply(null, arguments), callback);
+	};
+};
 
 /**
- * @param {Function}  Fn 
+ * @param {Function}  Fn
  * @param {this}     [handle] - this value on calling Fn
  * @param {Array}    [args]   - arguments to be passed through
  */

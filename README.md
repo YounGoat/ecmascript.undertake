@@ -33,7 +33,8 @@ function* success() {
         setTimeout(() => callback(null, 'B'), 100);
     };
 
-    let c = yield subtask;
+    let c = yield subtask(1);
+    // c equals 3
 
     // Traverse an array.
     let d = 0;
@@ -51,28 +52,44 @@ function* success() {
     return a + b + c + d;
 }
 
-function* subtask() {
-    let m = yield Promise.resolve(1);
-    let n = yield Promise.resolve(1);
+function* subtask(n) {
+    let m = yield Promise.resolve(n);
+    let n = yield Promise.resolve(n+1);
     return m + n;
 }
+
+// When no callback passed in, an instance of Promise will be returned.
+undertake(success).then(ret => {
+    // ret equals "AB36"
+});
 
 // A triditional callback is acceptable.
 undertake(success, function(err, data) {
     // err equals null
-    // data euqals "AB26"
+    // data euqals "AB36"
 });
 // RETURN undefined
 
-// When no callback passed in, an instance of Promise will be returned.
-undertake(success).then(ret => {
-    // ret equals "AB26"
-});`
+// If callback is also a generator function, an instance of Promise will be returned.
+undertake(success, function*(err, data) {
+    let f = yield subtask(4);
+    return data + f;
+}).then(ret => {
+    // ret equals "AB369";
+});
+
+// Create a new function which will accept the same paramenters as the generator function do,
+// and return an instance of Promise on being invoked.
+let fn = undertake.sync(subtask);
+fn(2).then(ret => {
+    // ret equals 5
+});
 ```
 
 ##	API
 
-*   Promise __undertake__(GeneratorFunction *fn*)
+*   Promise __undertake__(GeneratorFunction *fn* [, GeneratorFunction *callback*, boolean *compatible* ])
+*   void __undertake__(GeneratorFunction *fn*, Function *callback* [, boolean *compatible* ])
 *   Promise __undertake.applying__(Function *fn*, Object *this_value*, Array *args*)
 *   Promise __undertake.calling__(Function *fn*, Object *this_value*, Any *arg_0*, ...)
 *   Promise __undertake.easy__(GeneratorFunction *fn*)
@@ -80,6 +97,9 @@ undertake(success).then(ret => {
 *   Promise(Array) __undertake.map__(Array *arr*, GeneratorFunction *iterator*)
 *   boolean __undertake.isGenerator__(any *foo*)
 *   boolean __undertake.isGeneratorFunction__(any *foo*)
+*   Function __undertake.sync__(GeneratorFunction *fn* [, Function *callback*])
+
+If `callback(err, data)` exists, what returned by the generator function will become *data* and what throwed will become *err*.
 
 ##  undertake vs. undertake.easy
 

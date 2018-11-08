@@ -102,7 +102,7 @@ describe('undertake, without callback (promise returned)', () => {
 
 });
 
-describe('undertake, with callback (undefined returned)', () => {
+describe('undertake, with callback which is a normal function (undefined returned)', () => {
     const A = 100;
     const E = 'error';
 
@@ -189,6 +189,92 @@ describe('undertake, with callback (undefined returned)', () => {
 
 });
 
+describe('undertake, with callback which is also a generator function (promise returned)', () => {
+    const A = 100;
+    const E = 'error';
+
+    it('promise (resolved)', done => {
+        function* f() {
+            var a = yield Promise.resolve(A);
+            return a;
+        };
+        function* callback(err, ret) {
+            assert.equal(ret, A);
+        };
+        undertake(f, callback).then(done);
+    });
+
+    it('promise (reject)', done => {
+        function* f() {
+            yield Promise.reject(E);
+        };
+        function* callback(err, ret) {
+            assert.equal(err, E);
+        };
+        undertake(f, callback).then(done);
+    });
+
+    it('promise (runtime error)', done => {
+        function* f() {
+            yield new Promise(() => {
+                throw E;
+            });
+        };
+        function* callback(err, ret) {
+            assert.equal(err, E);
+        };
+        undertake(f, callback).then(done);
+    });
+
+    it('thunkified function (data returned)', done => {
+        function* f() {
+            var a = yield callback => {
+                process.nextTick(() => callback(null, A));
+            };
+            return a;
+        }
+        function* callback(err, ret) {
+            assert.equal(ret, A);
+        };
+        undertake(f, callback).then(done);
+    });
+
+    it('thunkified function (error returned)', done => {
+        function* f() {
+            var a = yield callback => {
+                process.nextTick(() => callback(E));
+            };
+            return a;
+        }
+        function* callback(err, ret) {
+            assert.equal(err, E);
+        };
+        undertake(f, callback).then(done);
+    });
+
+    it('thunkified function (runtime error)', done => {
+        function* f() {
+            yield callback => {
+                throw E;
+            };
+        };
+        function* callback(err, ret) {
+            assert.equal(err, E);
+        };
+        undertake(f, callback).then(done);
+    });
+
+    it('runtime error (directly in generatorFunction body)', done => {
+        function* f() {
+            throw E;
+        }
+        function* callback(err, ret) {
+            assert.equal(err, E);
+        };
+        undertake(f, callback).then(done);
+    });
+});
+
 describe('undertake, recursion on generator', () => {
     const A = 100;
     const E = 'error';
@@ -237,7 +323,6 @@ describe('undertake.easy', () => {
         });
     });
 });
-
 
 describe('traverse arrays', () => {
     it('undertake.each', done => {
@@ -293,6 +378,53 @@ describe('traverse arrays', () => {
 
         undertake(f).catch(ex => {
             assert.equal(E, ex);
+            done();
+        });
+    });
+});
+
+describe('undertake.sync', () => {
+    it('only generator function', done => {
+        function* g(n) {
+           return n + (yield Promise.resolve(1));
+        }
+
+        let fn = undertake.sync(g);
+
+        fn(1).then(d => {
+            assert.equal(d, 2);
+            done();
+        });
+    });
+
+    it('generator function and callback as normal function', done => {
+        function* g(n) {
+           return n + (yield Promise.resolve(1));
+        }
+
+        function callback(err, ret) {
+            assert.equal(ret, 2);
+            done();
+        }
+        
+        let fn = undertake.sync(g, callback);
+
+        fn(1);
+    });
+
+    it('generator function and callback as generator function', done => {
+        function* g(n) {
+           return n + (yield Promise.resolve(1));
+        }
+
+        function* callback(err, ret) {
+            return ret + 1;
+        }
+        
+        let fn = undertake.sync(g, callback);
+
+        fn(1).then(ret => {
+            assert.equal(ret, 3);
             done();
         });
     });
