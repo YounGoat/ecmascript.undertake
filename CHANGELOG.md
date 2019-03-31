@@ -2,6 +2,19 @@
 
 Notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning 2.0.0](http://semver.org/).
 
+##	[0.1.0] - Jan 30th, 2019
+
+*	Make parameter `compatiable` inherited when recursively invoking `undertake()`. E.g.
+	```javascript	
+	undertake.easy(function*() {
+		yield function*() {
+			let ret = yield 1;
+			// No throw happens.
+			// `ret` is valued with 1.
+		};
+	}, true);
+	```
+
 ##  [0.0.4] - Nov 8th, 2018
 
 *   `undertake.sync()` added.

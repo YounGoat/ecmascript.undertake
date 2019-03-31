@@ -45,7 +45,7 @@ function undertake(G, callback, compatible = false) {
 				step.value.then(ret => nextLoop(null, ret)).catch(reject);
 			}
 			else if (isGeneratorFunction(step.value) || isGenerator(step.value)) {
-				undertake(step.value, nextLoop);
+				undertake(step.value, nextLoop, compatible);
 			}
 			else if (step.value instanceof Function) {
 				try {
@@ -88,9 +88,43 @@ function undertake(G, callback, compatible = false) {
 	}
 }
 
-undertake.sync = function(Fn, callback) {
+/**
+ * Wrap a generator function and return a new normal one.
+ * @param {Function}  Fn
+ * @param {Function} [callback]
+ */
+undertake.sync = function(Fn, callback, compatible = false) {
 	return function() {
-		return undertake(Fn.apply(null, arguments), callback);
+		return undertake(Fn.apply(null, arguments), callback, compatible);
+	};
+};
+
+/**
+ * Wrap a generator function and return a new normal one.
+ * @param {Function}  Fn
+ * @param {number}   [callbackIndex]
+ */
+undertake.async = function(Fn, callbackIndex, compatible = false) {
+	return function() {
+		let args = Array.from(arguments);
+		let L = args.length;
+		let callback = null;
+		if (typeof callbackIndex == 'number') {
+			if (L > callbackIndex + 1) {
+				throw new Error('arguments length is larger than allowed');
+			}
+			if (L == callbackIndex + 1) {
+				if (typeof args[callbackIndex] != 'function') {
+					throw new Error(`argument at position ${callbackIndex} should be a callback function`);
+				}
+				callback = args.pop();
+			}
+		}
+		else if (L > 0 && typeof args[L-1] == 'function') {
+			callback = args.pop();
+		}
+
+		return undertake(Fn.apply(null, args), callback, compatible);
 	};
 };
 
@@ -119,10 +153,6 @@ undertake.calling = function(Fn, handle, ...arg) {
 	});
 };
 
-undertake.easy = function(G, callback) {
-	return undertake(G, callback, true);
-};
-
 /**
  * @param  {Array} arr
  * @param  {GeneratorFunction} iterator
@@ -134,6 +164,18 @@ undertake.each = function(arr, iterator) {
 			yield iterator(arr[i], i);
 		}
 	});
+};
+
+undertake.easy = function(G, callback) {
+	return undertake(G, callback, true);
+};
+
+undertake.easy.sync = function(Fn, callback) {
+	return undertake.sync(Fn, callback, true);
+};
+
+undertake.easy.async = function(Fn, callbackIndex) {
+	return undertake.async(Fn, callbackIndex, true);
 };
 
 /**
